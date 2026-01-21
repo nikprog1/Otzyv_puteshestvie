@@ -5,9 +5,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    if (!process.env.PRISMA_CLIENT_ENGINE_TYPE) {
-      process.env.PRISMA_CLIENT_ENGINE_TYPE = "binary";
-    }
+    process.env.PRISMA_CLIENT_ENGINE_TYPE = "binary";
 
     if (!process.env.DATABASE_URL) {
       throw new Error("DATABASE_URL is not set.");

@@ -1,6 +1,4 @@
-if (!process.env.PRISMA_CLIENT_ENGINE_TYPE) {
-  process.env.PRISMA_CLIENT_ENGINE_TYPE = "binary";
-}
+process.env.PRISMA_CLIENT_ENGINE_TYPE = "binary";
 
 type PrismaClientType = import("@prisma/client").PrismaClient;
 const { PrismaClient } = require("@prisma/client") as typeof import("@prisma/client");
