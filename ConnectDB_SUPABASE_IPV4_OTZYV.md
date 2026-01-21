@@ -37,7 +37,6 @@ PRISMA_CLI_DIRECT_URL="$CLI_POOLER_URL"
 ## prisma.config.ts
 ## datasource: {
 ##   url: process.env["PRISMA_CLI_DATABASE_URL"],
-##   directUrl: process.env["PRISMA_CLI_DIRECT_URL"],
 ## }
 ## Важно: не используйте DATABASE_URL/DIRECT_URL в Prisma CLI — через pooler
 ## возможны ошибки prepared statement или разрывы соединения.

@@ -10,7 +10,6 @@
 DATABASE_URL=postgresql://postgres.<PROJECT_REF>:<DB_PASSWORD>@<POOLER_HOST>:6543/postgres?sslmode=require&pgbouncer=true&statement_cache_size=0
 DIRECT_URL=postgresql://postgres.<PROJECT_REF>:<DB_PASSWORD>@<POOLER_HOST>:6543/postgres?sslmode=require&pgbouncer=true&statement_cache_size=0
 PRISMA_CLI_DATABASE_URL=postgresql://postgres.<PROJECT_REF>:<DB_PASSWORD>@<POOLER_HOST>:5432/postgres?pgbouncer=true&statement_cache_size=0&connection_limit=1&sslmode=disable
-PRISMA_CLI_DIRECT_URL=postgresql://postgres.<PROJECT_REF>:<DB_PASSWORD>@<POOLER_HOST>:5432/postgres?pgbouncer=true&statement_cache_size=0&connection_limit=1&sslmode=disable
 ```
 
 ## Где взять значения

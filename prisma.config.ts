@@ -10,6 +10,5 @@ export default defineConfig({
   },
   datasource: {
     url: process.env["PRISMA_CLI_DATABASE_URL"],
-    directUrl: process.env["PRISMA_CLI_DIRECT_URL"],
   },
 });
