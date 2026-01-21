@@ -1,12 +1,36 @@
-import { prisma } from "@/lib/prisma";
+\"use client\";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+import { useEffect, useState } from "react";
 
-export default async function Home() {
-  const notes = await prisma.note.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+type Note = {
+  id: string;
+  title: string;
+  createdAt: string;
+};
+
+export default function Home() {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const response = await fetch("/api/notes", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("Failed to load notes");
+        }
+        const data = (await response.json()) as Note[];
+        setNotes(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, []);
 
   return (
     <main className="min-h-screen bg-zinc-50 px-6 py-12 text-zinc-900">
@@ -17,7 +41,15 @@ export default async function Home() {
             Данные загружаются из Supabase (PostgreSQL) через Prisma.
           </p>
         </header>
-        {notes.length === 0 ? (
+        {loading ? (
+          <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-sm text-zinc-600">
+            Загрузка данных...
+          </div>
+        ) : error ? (
+          <div className="rounded-lg border border-dashed border-red-300 bg-white p-6 text-sm text-red-600">
+            Ошибка загрузки: {error}
+          </div>
+        ) : notes.length === 0 ? (
           <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-sm text-zinc-600">
             Записей пока нет. Добавьте данные в таблицу Note и обновите страницу.
           </div>
@@ -30,7 +62,7 @@ export default async function Home() {
               >
                 <div className="text-lg font-medium">{note.title}</div>
                 <div className="text-xs text-zinc-500">
-                  {note.createdAt.toISOString()}
+                  {new Date(note.createdAt).toISOString()}
                 </div>
               </li>
             ))}
