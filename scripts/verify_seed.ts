@@ -12,11 +12,14 @@ async function main() {
     },
   });
 
-  const category = await prisma.category.upsert({
+  const existingCategory = await prisma.category.findFirst({
     where: { category: "General" },
-    update: {},
-    create: { category: "General" },
   });
+  const category =
+    existingCategory ??
+    (await prisma.category.create({
+      data: { category: "General" },
+    }));
 
   const route = await prisma.trip_Route.create({
     data: {
