@@ -11,7 +11,8 @@
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
-    "prisma:seed": "node --loader ts-node/esm prisma/seed.ts"
+    "prisma:seed": "node --loader ts-node/esm prisma/seed.ts",
+    "prisma:verify": "node --loader ts-node/esm scripts/verify_seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",

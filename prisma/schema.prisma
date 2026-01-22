@@ -14,8 +14,123 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Visibility {
+  PRIVATE
+  PUBLIC
+}
+
+model User {
+  id         String       @id @default(cuid())
+  email      String       @unique
+  name       String?
+  createdAt  DateTime     @default(now())
+
+  notes      Note[]
+  routes     Trip_Route[]
+  votes      Vote[]
+  collections Collection[]
+}
+
 model Note {
   id        String   @id @default(uuid()) @db.Uuid
+  ownerId   String
   title     String
   createdAt DateTime @default(now())
+
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id        String      @id @default(uuid()) @db.Uuid
+  category  String
+
+  routes    Trip_Route[]
+}
+
+model Tag {
+  id        String          @id @default(uuid()) @db.Uuid
+  name      String          @unique
+
+  routes    Trip_RouteTag[]
+}
+
+model Trip_Route {
+  id          String         @id @default(uuid()) @db.Uuid
+  ownerId     String
+  title       String
+  content     String
+  description String?
+  categoryId  String         @db.Uuid
+  visibility  Visibility     @default(PRIVATE)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  publishedAt DateTime?
+
+  owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  category    Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  tags        Trip_RouteTag[]
+  votes       Vote[]
+  versions    PromptVersion[]
+  collections CollectionRoute[]
+
+  @@index([ownerId, updatedAt])
+  @@index([visibility, createdAt])
+}
+
+model Trip_RouteTag {
+  id         String     @id @default(uuid()) @db.Uuid
+  routeId    String     @db.Uuid
+  tagId      String     @db.Uuid
+
+  route      Trip_Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  tag        Tag        @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([routeId, tagId])
+}
+
+model Vote {
+  id        String     @id @default(uuid()) @db.Uuid
+  userId    String
+  routeId   String     @db.Uuid
+  value     Int        @default(1)
+  createdAt DateTime   @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  route     Trip_Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, routeId])
+  @@index([routeId])
+  @@index([userId])
+}
+
+model Collection {
+  id        String            @id @default(uuid()) @db.Uuid
+  ownerId   String
+  name      String
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  owner     User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  routes    CollectionRoute[]
+}
+
+model CollectionRoute {
+  id            String     @id @default(uuid()) @db.Uuid
+  collectionId  String     @db.Uuid
+  routeId       String     @db.Uuid
+
+  collection    Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  route         Trip_Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, routeId])
+}
+
+model PromptVersion {
+  id        String     @id @default(uuid()) @db.Uuid
+  routeId   String     @db.Uuid
+  title     String
+  content   String
+  createdAt DateTime   @default(now())
+
+  route     Trip_Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
 }
