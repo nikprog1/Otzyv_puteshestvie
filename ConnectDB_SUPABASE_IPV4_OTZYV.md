@@ -1,8 +1,8 @@
-# ConnectDB_SUPABASE_IPV4_OTZYV (Supabase IPv4 via pooler)
+# ConnectDB_SUPABASE_IPV4_OTZYV (Supabase IPv4)
 
 ## Цель
-Подключение к любому проекту Supabase по IPv4 без add-on, с pooler.
-Конфигурация: приложение через transaction pooler (6543), Prisma CLI/миграции через session pooler (5432).
+Подключение к Supabase по IPv4 и стабильная работа view-db.
+Схема БД соответствует `DATABASE.md`.
 
 ## Исходные данные (заменить плейсхолдеры)
 PROJECT_REF="<PROJECT_REF>"
@@ -27,11 +27,26 @@ APP_POOLER_URL="postgresql://$POOLER_USER:$DB_PASSWORD@$POOLER_HOST:$POOLER_PORT
 # sslmode=disable используется для устойчивости CLI через pooler.
 CLI_POOLER_URL="postgresql://$POOLER_USER:$DB_PASSWORD@$POOLER_HOST:$POOLER_PORT_SESS/postgres?pgbouncer=true&statement_cache_size=0&connection_limit=1&sslmode=disable"
 
-## .env шаблон (IPv4 + pooler)
-DATABASE_URL="$APP_POOLER_URL"
-DIRECT_URL="$APP_POOLER_URL"
-PRISMA_CLI_DATABASE_URL="$CLI_POOLER_URL"
-PRISMA_CLI_DIRECT_URL="$CLI_POOLER_URL"
+# Direct IPv4 (без pooler) — через Supabase IPv4 add-on или внешний proxy
+# ВАЖНО: этот URL не должен содержать pgbouncer=true.
+DIRECT_IPV4_URL="postgresql://<USER>:<PASSWORD>@<IPV4_HOST_OR_PROXY>:5432/postgres?sslmode=require"
+
+## Схема БД (DATABASE.md)
+- Note: id, ownerId -> User, title, createdAt
+- User: id, email unique, name optional, createdAt
+- Trip_Route: id, ownerId -> User, title, content, description optional, categoryId -> Category,
+  visibility (PRIVATE|PUBLIC), createdAt, updatedAt, publishedAt nullable
+- Vote: id, userId -> User, Trip_RouteId -> Trip_Route, value int default 1, createdAt
+- Category: id, category
+- UNIQUE(userId, Trip_RouteId) для голосов
+- Индексы: Trip_Route(ownerId, updatedAt), Trip_Route(visibility, createdAt), Vote(Trip_RouteId), Vote(userId)
+
+## .env (используемые значения)
+DATABASE_URL="postgresql://postgres.wltzoafwktophoxihfca:***@aws-1-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true&statement_cache_size=0"
+DIRECT_URL="postgresql://postgres.wltzoafwktophoxihfca:***@aws-1-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true&statement_cache_size=0"
+PRISMA_CLI_DATABASE_URL="postgresql://postgres.wltzoafwktophoxihfca:***@aws-1-eu-west-1.pooler.supabase.com:5432/postgres?pgbouncer=true&statement_cache_size=0&connection_limit=1&sslmode=disable"
+PRISMA_CLI_DIRECT_URL="postgresql://postgres.wltzoafwktophoxihfca:***@aws-1-eu-west-1.pooler.supabase.com:5432/postgres?pgbouncer=true&statement_cache_size=0&connection_limit=1&sslmode=disable"
+LOCAL_DATABASE_URL="postgresql://postgres.wltzoafwktophoxihfca:***@aws-1-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true&statement_cache_size=0"
 
 ## Prisma config (CLI берёт только PRISMA_CLI_*)
 ## prisma.config.ts
@@ -40,6 +55,9 @@ PRISMA_CLI_DIRECT_URL="$CLI_POOLER_URL"
 ## }
 ## Важно: не используйте DATABASE_URL/DIRECT_URL в Prisma CLI — через pooler
 ## возможны ошибки prepared statement или разрывы соединения.
+##
+## При миграции использовались обе переменные из .env:
+## PRISMA_CLI_DATABASE_URL и PRISMA_CLI_DIRECT_URL.
 
 ## Проверка подключения (CLI)
 .\scripts\load-env.ps1
@@ -93,3 +111,8 @@ npx prisma db push
 - pgbouncer требует отключения prepared statements:
   - pgbouncer=true
   - statement_cache_size=0
+- Pooler URL **не подходит** для Prisma Studio (частые `P1017`).
+- Для view-db local с pooler используйте node-postgres (pg), а не Prisma Client.
+- Если `LOCAL_DATABASE_URL` указывает на transaction pooler (6543), view-db может
+  автоматически использовать `PRISMA_CLI_DATABASE_URL` (session pooler 5432).
+- Успешное подключение view-db: target=local через pooler, с fallback на session pooler.
