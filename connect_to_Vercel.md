@@ -21,3 +21,5 @@ PRISMA_CLI_DATABASE_URL=postgresql://postgres.<PROJECT_REF>:<DB_PASSWORD>@<POOLE
 - Приложение работает через `DATABASE_URL` (transaction pooler, 6543).
 - Prisma CLI и миграции используют только `PRISMA_CLI_*` (session pooler, 5432).
 - Для pooler обязательны `pgbouncer=true` и `statement_cache_size=0`.
+- `DIRECT_URL` использовать для Prisma Studio.
+- Для view-db локальную БД брать из `LOCAL_DATABASE_URL` и указывать в неё ту же строку, что и `DIRECT_URL`.

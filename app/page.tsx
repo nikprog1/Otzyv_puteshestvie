@@ -1,72 +1,357 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 
-type Note = {
-  id: string;
-  title: string;
-  createdAt: string;
+type Target = "local" | "prod";
+
+type ColumnInfo = {
+  column_name: string;
+  data_type: string;
+};
+
+type TableResponse = {
+  table: string;
+  columns: ColumnInfo[];
+  primaryKeys: string[];
+  rows: Record<string, unknown>[];
+  page: number;
+  pageSize: number;
+  total: number;
+};
+
+const formatValue = (value: unknown) => {
+  if (value === null || value === undefined) {
+    return "null";
+  }
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+  return String(value);
 };
 
 export default function Home() {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [target, setTarget] = useState<Target>("local");
+  const [tables, setTables] = useState<string[]>([]);
+  const [selectedTable, setSelectedTable] = useState<string | null>(null);
+  const [tableData, setTableData] = useState<TableResponse | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [loadingTables, setLoadingTables] = useState(false);
+  const [loadingTable, setLoadingTable] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [createPayload, setCreatePayload] = useState("{}");
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const response = await fetch("/api/notes", { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error("Failed to load notes");
-        }
-        const data = (await response.json()) as Note[];
-        setNotes(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
-      } finally {
-        setLoading(false);
+  const totalPages = useMemo(() => {
+    if (!tableData) return 1;
+    return Math.max(1, Math.ceil(tableData.total / tableData.pageSize));
+  }, [tableData]);
+
+  const loadTables = async () => {
+    setLoadingTables(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/db/tables?target=${target}`);
+      if (!response.ok) {
+        throw new Error("Не удалось загрузить список таблиц.");
       }
-    };
+      const data = (await response.json()) as { tables: string[] };
+      setTables(data.tables);
+      setSelectedTable(null);
+      setTableData(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setLoadingTables(false);
+    }
+  };
 
-    load();
-  }, []);
+  const loadTable = async (table: string, nextPage = page) => {
+    setLoadingTable(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+        target,
+        name: table,
+        page: String(nextPage),
+        pageSize: String(pageSize),
+      });
+      const response = await fetch(`/api/db/table?${params}`);
+      if (!response.ok) {
+        throw new Error("Не удалось загрузить таблицу.");
+      }
+      const data = (await response.json()) as TableResponse;
+      setTableData(data);
+      setSelectedTable(table);
+      setPage(data.page);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setLoadingTable(false);
+    }
+  };
+
+  const handleCreate = async () => {
+    if (!selectedTable) return;
+    try {
+      const payload = JSON.parse(createPayload) as Record<string, unknown>;
+      const response = await fetch("/api/db/table", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target, table: selectedTable, data: payload }),
+      });
+      if (!response.ok) {
+        throw new Error("Не удалось создать запись.");
+      }
+      await loadTable(selectedTable, page);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка в JSON.");
+    }
+  };
+
+  const handleUpdate = async (row: Record<string, unknown>) => {
+    if (!tableData || tableData.primaryKeys.length === 0 || !selectedTable) {
+      setError("Нет первичного ключа для обновления.");
+      return;
+    }
+    const defaultPayload = JSON.stringify(row, null, 2);
+    const updated = window.prompt("JSON для обновления строки:", defaultPayload);
+    if (!updated) return;
+
+    try {
+      const payload = JSON.parse(updated) as Record<string, unknown>;
+      const where: Record<string, unknown> = {};
+      tableData.primaryKeys.forEach((key) => {
+        where[key] = row[key];
+      });
+      const response = await fetch("/api/db/table", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          target,
+          table: selectedTable,
+          data: payload,
+          where,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Не удалось обновить запись.");
+      }
+      await loadTable(selectedTable, page);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка в JSON.");
+    }
+  };
+
+  const handleDelete = async (row: Record<string, unknown>) => {
+    if (!tableData || tableData.primaryKeys.length === 0 || !selectedTable) {
+      setError("Нет первичного ключа для удаления.");
+      return;
+    }
+    const confirmed = window.confirm("Удалить запись?");
+    if (!confirmed) return;
+
+    const where: Record<string, unknown> = {};
+    tableData.primaryKeys.forEach((key) => {
+      where[key] = row[key];
+    });
+    const response = await fetch("/api/db/table", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ target, table: selectedTable, where }),
+    });
+    if (!response.ok) {
+      setError("Не удалось удалить запись.");
+      return;
+    }
+    await loadTable(selectedTable, page);
+  };
 
   return (
     <main className="min-h-screen bg-zinc-50 px-6 py-12 text-zinc-900">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <header className="flex flex-col gap-2">
-          <h1 className="text-3xl font-semibold">Notes</h1>
+          <h1 className="text-3xl font-semibold">view-db</h1>
           <p className="text-sm text-zinc-600">
-            Данные загружаются из Supabase (PostgreSQL) через Prisma.
+            Выберите базу, список таблиц и выполните CRUD операции.
           </p>
         </header>
-        {loading ? (
-          <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-sm text-zinc-600">
-            Загрузка данных...
-          </div>
-        ) : error ? (
-          <div className="rounded-lg border border-dashed border-red-300 bg-white p-6 text-sm text-red-600">
-            Ошибка загрузки: {error}
-          </div>
-        ) : notes.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-sm text-zinc-600">
-            Записей пока нет. Добавьте данные в таблицу Note и обновите страницу.
-          </div>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {notes.map((note) => (
-              <li
-                key={note.id}
-                className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm"
+
+        <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-center gap-4">
+            <label className="flex items-center gap-2 text-sm">
+              База данных:
+              <select
+                className="rounded border border-zinc-300 px-2 py-1"
+                value={target}
+                onChange={(event) => {
+                  setTarget(event.target.value as Target);
+                  setTables([]);
+                  setSelectedTable(null);
+                  setTableData(null);
+                }}
               >
-                <div className="text-lg font-medium">{note.title}</div>
-                <div className="text-xs text-zinc-500">
-                  {new Date(note.createdAt).toISOString()}
+                <option value="local">Local</option>
+                <option value="prod">Prod</option>
+              </select>
+            </label>
+            <button
+              className="rounded bg-zinc-900 px-3 py-1.5 text-sm text-white"
+              onClick={loadTables}
+              disabled={loadingTables}
+            >
+              {loadingTables ? "Загрузка..." : "Загрузить таблицы"}
+            </button>
+          </div>
+
+          {tables.length > 0 && (
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {tables.map((table) => (
+                <div
+                  key={table}
+                  className="flex items-center justify-between rounded border border-zinc-200 px-3 py-2 text-sm"
+                >
+                  <span>{table}</span>
+                  <button
+                    className="rounded border border-zinc-300 px-2 py-1 text-xs"
+                    onClick={() => loadTable(table, 1)}
+                    disabled={loadingTable}
+                  >
+                    Открыть
+                  </button>
                 </div>
-              </li>
-            ))}
-          </ul>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        {selectedTable && tableData && (
+          <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-lg font-semibold">{tableData.table}</h2>
+                <p className="text-xs text-zinc-500">
+                  PK:{" "}
+                  {tableData.primaryKeys.length > 0
+                    ? tableData.primaryKeys.join(", ")
+                    : "не найден"}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <button
+                  className="rounded border border-zinc-300 px-2 py-1"
+                  disabled={page <= 1}
+                  onClick={() => loadTable(selectedTable, page - 1)}
+                >
+                  Назад
+                </button>
+                <span>
+                  {page} / {totalPages}
+                </span>
+                <button
+                  className="rounded border border-zinc-300 px-2 py-1"
+                  disabled={page >= totalPages}
+                  onClick={() => loadTable(selectedTable, page + 1)}
+                >
+                  Вперед
+                </button>
+                <select
+                  className="rounded border border-zinc-300 px-2 py-1"
+                  value={pageSize}
+                  onChange={(event) => {
+                    const next = Number(event.target.value);
+                    setPageSize(next);
+                    loadTable(selectedTable, 1);
+                  }}
+                >
+                  {[5, 10, 20, 50].map((size) => (
+                    <option key={size} value={size}>
+                      {size} / стр.
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-4 overflow-auto">
+              <table className="min-w-full border-collapse text-sm">
+                <thead>
+                  <tr>
+                    {tableData.columns.map((column) => (
+                      <th
+                        key={column.column_name}
+                        className="border-b border-zinc-200 px-3 py-2 text-left font-medium"
+                      >
+                        {column.column_name}
+                      </th>
+                    ))}
+                    <th className="border-b border-zinc-200 px-3 py-2 text-left font-medium">
+                      Действия
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tableData.rows.map((row, idx) => (
+                    <tr key={idx} className="border-b border-zinc-100">
+                      {tableData.columns.map((column) => (
+                        <td key={column.column_name} className="px-3 py-2">
+                          {formatValue(row[column.column_name])}
+                        </td>
+                      ))}
+                      <td className="px-3 py-2">
+                        <div className="flex gap-2">
+                          <button
+                            className="rounded border border-zinc-300 px-2 py-1 text-xs"
+                            onClick={() => handleUpdate(row)}
+                            disabled={tableData.primaryKeys.length === 0}
+                          >
+                            Редактировать
+                          </button>
+                          <button
+                            className="rounded border border-red-300 px-2 py-1 text-xs text-red-600"
+                            onClick={() => handleDelete(row)}
+                            disabled={tableData.primaryKeys.length === 0}
+                          >
+                            Удалить
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {tableData.rows.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={tableData.columns.length + 1}
+                        className="px-3 py-6 text-center text-sm text-zinc-500"
+                      >
+                        Нет данных.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-6">
+              <h3 className="text-sm font-semibold">Создать запись</h3>
+              <textarea
+                className="mt-2 h-32 w-full rounded border border-zinc-300 p-2 font-mono text-xs"
+                value={createPayload}
+                onChange={(event) => setCreatePayload(event.target.value)}
+              />
+              <button
+                className="mt-2 rounded bg-zinc-900 px-3 py-1.5 text-sm text-white"
+                onClick={handleCreate}
+              >
+                Создать
+              </button>
+            </div>
+          </section>
         )}
       </div>
     </main>

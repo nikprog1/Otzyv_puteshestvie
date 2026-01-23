@@ -42,7 +42,7 @@ model Note {
 
 model Category {
   id        String      @id @default(uuid()) @db.Uuid
-  category  String
+  category  String      @unique
 
   routes    Trip_Route[]
 }
@@ -70,7 +70,7 @@ model Trip_Route {
   category    Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   tags        Trip_RouteTag[]
   votes       Vote[]
-  versions    PromptVersion[]
+  versions    Trip_RouteVersion[]
   collections CollectionRoute[]
 
   @@index([ownerId, updatedAt])
@@ -125,7 +125,7 @@ model CollectionRoute {
   @@unique([collectionId, routeId])
 }
 
-model PromptVersion {
+model Trip_RouteVersion {
   id        String     @id @default(uuid()) @db.Uuid
   routeId   String     @db.Uuid
   title     String

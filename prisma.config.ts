@@ -3,12 +3,41 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+const buildCliUrl = (raw?: string) => {
+  if (!raw) return undefined;
+  const query =
+    "pgbouncer=true&statement_cache_size=0&connection_limit=1&sslmode=disable";
+  const [base] = raw.split("?");
+  const withPort = base.includes(":6543/")
+    ? base.replace(":6543/", ":5432/")
+    : base;
+  return `${withPort}?${query}`;
+};
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["PRISMA_CLI_DATABASE_URL"] ?? process.env["DATABASE_URL"] ?? "",
+    url: (() => {
+      const baseUrl =
+        process.env["DATABASE_URL"] ??
+        process.env["LOCAL_DATABASE_URL"] ??
+        process.env["PROD_DATABASE_URL"];
+      const rawUrl =
+        process.env["PRISMA_CLI_DATABASE_URL"] ??
+        buildCliUrl(baseUrl) ??
+        (process.env["DB_TARGET"] === "local"
+          ? process.env["LOCAL_DATABASE_URL"]
+          : process.env["DB_TARGET"] === "prod"
+            ? process.env["PROD_DATABASE_URL"]
+            : undefined) ??
+        baseUrl ??
+        "";
+      return rawUrl.includes("pooler.supabase.com:6543")
+        ? buildCliUrl(rawUrl) ?? rawUrl
+        : rawUrl;
+    })(),
   },
 });
