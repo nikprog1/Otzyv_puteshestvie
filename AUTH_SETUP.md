@@ -48,6 +48,8 @@ GOOGLE_CLIENT_SECRET="..."
 AUTH_SECRET="..."
 DATABASE_URL="..."
 ```
+**Vercel:** В Project → Settings → Environment Variables обязательно задайте `AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `DATABASE_URL` для Production. Без `AUTH_SECRET` на Vercel будут 500 на `/api/auth/session` и ошибка «Configuration» при входе. См. также connect_to_Vercel.md.
+
 Для localhost можно добавить:
 ```
 AUTH_URL="http://localhost:3000"

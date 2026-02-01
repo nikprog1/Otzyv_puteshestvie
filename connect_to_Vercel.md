@@ -10,7 +10,13 @@
 DATABASE_URL=postgresql://postgres.<PROJECT_REF>:<DB_PASSWORD>@<POOLER_HOST>:6543/postgres?sslmode=require&pgbouncer=true&statement_cache_size=0
 DIRECT_URL=postgresql://postgres.<PROJECT_REF>:<DB_PASSWORD>@<POOLER_HOST>:6543/postgres?sslmode=require&pgbouncer=true&statement_cache_size=0
 PRISMA_CLI_DATABASE_URL=postgresql://postgres.<PROJECT_REF>:<DB_PASSWORD>@<POOLER_HOST>:5432/postgres?pgbouncer=true&statement_cache_size=0&connection_limit=1&sslmode=disable
+
+AUTH_SECRET=<длинная случайная строка, см. AUTH_SETUP.md>
+GOOGLE_CLIENT_ID=<из Google Cloud Console>
+GOOGLE_CLIENT_SECRET=<из Google Cloud Console>
 ```
+
+**Важно:** Без `AUTH_SECRET` в production на Vercel появляются 500 на `/api/auth/session` и ошибка «Configuration» при входе. Сгенерировать секрет: `openssl rand -base64 32` или см. AUTH_SETUP.md. В Google Cloud Console в «Authorized redirect URIs» добавьте `https://<ваш-домен>.vercel.app/api/auth/callback/google`.
 
 ## Где взять значения
 - `PROJECT_REF` — Supabase Project Ref.
