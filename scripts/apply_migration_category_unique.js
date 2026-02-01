@@ -5,6 +5,9 @@ const { Client } = require("pg");
 const migrationName = "20260121120000_add_category_unique";
 const migrationPath = "prisma/migrations/20260121120000_add_category_unique/migration.sql";
 
+const authMigrationName = "20260124130000_add_auth_models";
+const authMigrationPath = "prisma/migrations/20260124130000_add_auth_models/migration.sql";
+
 const loadEnv = (path) => {
   if (!fs.existsSync(path)) return;
   const contents = fs.readFileSync(path, "utf8");
@@ -31,6 +34,8 @@ loadEnv(".env");
 
 const sql = fs.readFileSync(migrationPath, "utf8");
 const checksum = crypto.createHash("sha256").update(sql).digest("hex");
+const authSql = fs.readFileSync(authMigrationPath, "utf8");
+const authChecksum = crypto.createHash("sha256").update(authSql).digest("hex");
 const rawUrl =
   process.env.PRISMA_CLI_DATABASE_URL ||
   process.env.DATABASE_URL ||
@@ -67,6 +72,25 @@ const ensureMigration = async () => {
     await client.query(
       'INSERT INTO "_prisma_migrations" (id, checksum, finished_at, migration_name, logs, rolled_back_at, started_at, applied_steps_count) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
       [crypto.randomUUID(), checksum, now, migrationName, null, null, now, 1]
+    );
+  }
+
+  const authTables = await client.query(
+    "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name IN ('Account','Session','VerificationToken')"
+  );
+  if (authTables.rowCount < 3) {
+    await client.query(authSql);
+  }
+
+  const authExisting = await client.query(
+    'SELECT 1 FROM "_prisma_migrations" WHERE migration_name=$1',
+    [authMigrationName]
+  );
+  if (authExisting.rowCount === 0) {
+    const now = new Date();
+    await client.query(
+      'INSERT INTO "_prisma_migrations" (id, checksum, finished_at, migration_name, logs, rolled_back_at, started_at, applied_steps_count) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+      [crypto.randomUUID(), authChecksum, now, authMigrationName, null, null, now, 1]
     );
   }
 };

@@ -36,3 +36,13 @@
 ## Проверки
 - `local`: открыть список таблиц, проверить пагинацию и CRUD на 1 таблице.
 - `prod`: переключить `target=prod`, убедиться, что таблицы загружаются.
+
+## Auth.js (Google OAuth)
+- Переменные окружения:
+  - `GOOGLE_CLIENT_ID`
+  - `GOOGLE_CLIENT_SECRET`
+  - `AUTH_SECRET`
+  - `DATABASE_URL`
+- Страницы:
+  - `/login` — вход через Google.
+  - `/dashboard`, `/my-routes` — доступны только после входа.
