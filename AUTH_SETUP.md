@@ -48,3 +48,47 @@ GOOGLE_CLIENT_SECRET="..."
 AUTH_SECRET="..."
 DATABASE_URL="..."
 ```
+Для localhost можно добавить:
+```
+AUTH_URL="http://localhost:3000"
+```
+или (для NextAuth v4):
+```
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+## 4) Тестирование на localhost
+
+### Пошаговая проверка
+1. Убедитесь, что в `.env` заданы `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_SECRET`, `DATABASE_URL`.
+2. Запустите сервер: `npm run dev`.
+3. Откройте в браузере: `http://localhost:3000/login`.
+4. Нажмите «Войти через Google».
+5. После успешного входа должен быть редирект на `/dashboard`.
+
+### Ожидаемый поток
+- Запрос к Google → редирект на `http://localhost:3000/api/auth/callback/google?code=...` → создание сессии → редирект на `/dashboard`.
+
+### Проверка сессии
+- `GET http://localhost:3000/api/auth/session` (в браузере или через fetch) должен вернуть объект с полями `user` (id, email, name и т.д.) при активной сессии.
+
+### Проверка сохранения пользователя в БД
+После первого входа проверьте таблицы `User`, `Account`, `Session` (через Prisma Studio или view-db): должна появиться запись пользователя и сессии.
+
+## 5) Советы по отладке
+
+- **redirect_uri_mismatch**  
+  В Google Cloud Console в «Authorized redirect URIs» должна быть **точно** строка:  
+  `http://localhost:3000/api/auth/callback/google` (без слэша в конце, тот же порт).
+
+- **401 / пустая сессия**  
+  Проверьте наличие `AUTH_SECRET` в `.env`. Без него подпись cookie не работает.
+
+- **Ошибка при запуске dev**  
+  В консоли при старте выводится предупреждение, если не заданы `AUTH_SECRET`, `GOOGLE_CLIENT_ID` или `GOOGLE_CLIENT_SECRET`. Исправьте `.env` и перезапустите.
+
+- **Сеть**  
+  Во вкладке Network (DevTools) проверьте запрос к `/api/auth/callback/google`: статус должен быть 302 (редирект), при ошибке — 500 или редирект на `/login?error=...`.
+
+- **Ошибка на странице логина**  
+  При редиректе с `?error=...` на странице `/login` отображается сообщение «Ошибка входа. Попробуйте снова.».

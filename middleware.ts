@@ -6,6 +6,7 @@ export default auth((req) => {
     const loginUrl = new URL("/login", req.url);
     return NextResponse.redirect(loginUrl);
   }
+  return NextResponse.next();
 });
 
 export const config = {
