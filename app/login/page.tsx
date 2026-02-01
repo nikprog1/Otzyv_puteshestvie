@@ -35,6 +35,15 @@ export default async function LoginPage({
 
   const { error } = await searchParams;
 
+  const errorHints: Record<string, string> = {
+    Configuration:
+      "Проверьте на Vercel: AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, DATABASE_URL.",
+    Callback:
+      "Часто из‑за БД: проверьте DATABASE_URL на Vercel и логи функций (AdapterError).",
+    Default: "Проверьте логи деплоя на Vercel и redirect URI в Google Console.",
+  };
+  const hint = error ? errorHints[error] ?? errorHints.Default : null;
+
   return (
     <main className="min-h-screen bg-zinc-50 px-6 py-12 text-zinc-900">
       <div className="mx-auto flex w-full max-w-md flex-col gap-6 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
@@ -46,7 +55,12 @@ export default async function LoginPage({
         </div>
         {error && (
           <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            Ошибка входа. Попробуйте снова.
+            <p className="font-medium">Ошибка входа. Попробуйте снова.</p>
+            {error && (
+              <p className="mt-1 text-xs opacity-90">
+                Код: {error}. {hint}
+              </p>
+            )}
           </div>
         )}
         <LoginButton />
