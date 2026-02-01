@@ -25,6 +25,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   trustHost: true,
   secret: authSecret,
+  pages: {
+    error: "/login",
+  },
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
