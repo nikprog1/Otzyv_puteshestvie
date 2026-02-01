@@ -3,8 +3,8 @@ import { Client } from "pg";
 export type Target = "local" | "prod";
 
 const resolveUrl = (target: Target) => {
-  const local = process.env.LOCAL_DATABASE_URL;
-  const prod = process.env.PROD_DATABASE_URL;
+  const local = process.env.LOCAL_DATABASE_URL ?? process.env.DATABASE_URL;
+  const prod = process.env.PROD_DATABASE_URL ?? process.env.DATABASE_URL;
   const cli = process.env.PRISMA_CLI_DATABASE_URL;
 
   let url = target === "local" ? local : prod;
@@ -17,7 +17,9 @@ const resolveUrl = (target: Target) => {
     url = cli;
   }
   if (!url) {
-    throw new Error(`${target.toUpperCase()}_DATABASE_URL is not set.`);
+    throw new Error(
+      `${target.toUpperCase()}_DATABASE_URL (или DATABASE_URL) не задан.`
+    );
   }
 
   return url;
