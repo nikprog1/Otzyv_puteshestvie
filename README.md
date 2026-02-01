@@ -45,4 +45,4 @@
   - `DATABASE_URL`
 - Страницы:
   - `/login` — вход через Google.
-  - `/dashboard`, `/my-routes` — доступны только после входа.
+  - `/dashboard`, `/my-routes` — доступны только после входа (проверка сессии в страницах, без middleware).
