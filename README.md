@@ -46,3 +46,14 @@
 - Страницы:
   - `/login` — вход через Google.
   - `/dashboard`, `/my-routes` — доступны только после входа (проверка сессии в страницах, без middleware).
+
+## Личный кабинет (dashboard)
+- **Миграция:** таблица «Избранное» (Favorite). Применить: `npx prisma migrate deploy` (или вручную выполнить SQL из `prisma/migrations/20260221120000_add_favorite/migration.sql`).
+- **ENV:** те же, что для Auth.js (`DATABASE_URL`, `AUTH_SECRET`, Google OAuth). Категория «General» создаётся автоматически при первом создании маршрута.
+- **Страницы:**
+  - `/dashboard` — «Мои маршруты»: список своих маршрутов, поиск (debounce 300 ms), пагинация по 10, кнопка «+ Новый маршрут».
+  - `/dashboard/public` — публичные маршруты (visibility === PUBLIC); у владельца — редактирование, удаление, переключатель публичный/приватный.
+  - `/dashboard/favorites` — маршруты, добавленные в избранное.
+  - `/dashboard/history`, `/dashboard/settings` — заглушки «Скоро».
+- **Проверка:** войти → создать маршрут → отредактировать → переключить публичный/приватный → добавить в избранное (звезда) → удалить (на своей карточке).
+- **Файлы:** `prisma/schema.prisma` (модель Favorite, связь User.favorites), миграция `20260221120000_add_favorite`, `app/dashboard/layout.tsx`, `app/dashboard/components/DashboardSidebar.tsx`, `PromptCard.tsx`, `PromptDialog.tsx`, `SearchInput.tsx`, `MyRoutesContent.tsx`, `PublicRoutesContent.tsx`, `FavoritesContent.tsx`, `app/dashboard/actions.ts`, страницы `page.tsx` в `dashboard`, `dashboard/public`, `dashboard/favorites`, `dashboard/history`, `dashboard/settings`.

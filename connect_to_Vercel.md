@@ -29,3 +29,6 @@ GOOGLE_CLIENT_SECRET=<из Google Cloud Console>
 - Для pooler обязательны `pgbouncer=true` и `statement_cache_size=0`.
 - `DIRECT_URL` использовать для Prisma Studio.
 - Для view-db локальную БД брать из `LOCAL_DATABASE_URL` и указывать в неё ту же строку, что и `DIRECT_URL`.
+
+## Успешный вход через Google (Vercel)
+Полный список шагов до работающего входа и личного кабинета — см. AUTH_SETUP.md, раздел **6) Шаги до успешного входа (Vercel)** (переменные, redirect URI, поле `User.emailVerified`, миграция, деплой).

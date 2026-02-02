@@ -103,3 +103,26 @@ NEXTAUTH_URL="http://localhost:3000"
   4. Проверка доступности: в PowerShell выполните  
      `Test-NetConnection -ComputerName aws-1-eu-west-1.pooler.supabase.com -Port 5432`  
      Если TcpTestSucceeded = False, хост с вашей сети недоступен.
+
+## 6) Шаги до успешного входа (Vercel)
+
+Зафиксированные шаги, после которых вход через Google и личный кабинет работают на Vercel:
+
+1. **Переменные на Vercel** (Project → Settings → Environment Variables, Production):
+   - `AUTH_SECRET` — длинная случайная строка (см. раздел 2).
+   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` — из Google Cloud Console.
+   - `DATABASE_URL` — строка подключения к Supabase (transaction pooler, порт 6543). См. connect_to_Vercel.md.
+
+2. **Google Cloud Console** (OAuth client):
+   - В **Authorized redirect URIs** добавлен точный URL: `https://<ваш-домен>.vercel.app/api/auth/callback/google`.
+   - В **Authorized JavaScript origins** — `https://<ваш-домен>.vercel.app`.
+
+3. **Модель User в Prisma** — в таблице `User` должно быть поле `emailVerified` (DateTime?, nullable), иначе адаптер Auth.js при создании пользователя выдаёт ошибку «Unknown argument emailVerified». В схеме добавлено поле, миграция: `prisma/migrations/20260201120000_add_user_email_verified/migration.sql`.
+
+4. **Применить миграцию к БД** (один раз):
+   - Локально: `npx prisma migrate deploy` (при `DATABASE_URL`, указывающем на ту же БД, что и на Vercel).
+   - Или в Supabase → SQL Editor: `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerified" TIMESTAMP(3);`
+
+5. **Деплой** — после применения миграции заново задеплоить проект на Vercel (чтобы подтянулся обновлённый Prisma Client).
+
+Результат: пользователь входит через Google, создаётся запись в `User` и сессия в БД, открывается личный кабинет (`/dashboard`) с маршрутами.
