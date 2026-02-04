@@ -9,6 +9,7 @@ import {
   Lock,
 } from "lucide-react";
 import { deleteRoute, toggleVisibility, toggleFavorite } from "../actions";
+import { LikeButton } from "./LikeButton";
 import type { Trip_Route } from "@prisma/client";
 
 type PromptCardProps = {
@@ -16,6 +17,8 @@ type PromptCardProps = {
   isOwner: boolean;
   isFavorite: boolean;
   onEdit?: (route: Trip_Route) => void;
+  likesCount?: number;
+  likedByMe?: boolean;
 };
 
 function preview(text: string, maxLen = 120) {
@@ -29,6 +32,8 @@ export function PromptCard({
   isOwner,
   isFavorite,
   onEdit,
+  likesCount,
+  likedByMe = false,
 }: PromptCardProps) {
   async function handleDelete() {
     if (!confirm("Удалить маршрут?")) return;
@@ -55,6 +60,13 @@ export function PromptCard({
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-1">
+        {typeof likesCount === "number" && (
+          <LikeButton
+            routeId={route.id}
+            initialLiked={likedByMe}
+            initialCount={likesCount}
+          />
+        )}
         <button
           type="button"
           onClick={handleToggleFavorite}

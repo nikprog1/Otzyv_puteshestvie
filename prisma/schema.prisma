@@ -32,6 +32,7 @@ model User {
   votes      Vote[]
   collections Collection[]
   favorites  Favorite[]
+  likes      Like[]
 
   accounts   Account[]
   sessions   Session[]
@@ -79,6 +80,7 @@ model Trip_Route {
   versions    Trip_RouteVersion[]
   collections CollectionRoute[]
   favorites   Favorite[]
+  likes       Like[]
 
   @@index([ownerId, updatedAt])
   @@index([visibility, createdAt])
@@ -107,6 +109,20 @@ model Trip_RouteTag {
   tag        Tag        @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@unique([routeId, tagId])
+}
+
+model Like {
+  id        String     @id @default(cuid())
+  userId    String
+  routeId   String     @db.Uuid
+  createdAt DateTime   @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  route     Trip_Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, routeId])
+  @@index([routeId])
+  @@index([userId])
 }
 
 model Vote {

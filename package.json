@@ -13,7 +13,8 @@
     "lint": "eslint",
     "prisma:seed": "node --loader ts-node/esm prisma/seed.ts",
     "prisma:verify": "node --loader ts-node/esm scripts/verify_seed.ts",
-    "migrate:favorite": "node scripts/run_migration_add_favorite.js"
+    "migrate:favorite": "node scripts/run_migration_add_favorite.js",
+    "migrate:like": "node scripts/run_migration_add_like.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
