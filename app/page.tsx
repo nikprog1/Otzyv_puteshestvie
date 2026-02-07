@@ -86,7 +86,7 @@ export default async function HomePage() {
         {recentRoutes.length === 0 ? (
           <p className="text-muted-foreground">Пока нет публичных маршрутов.</p>
         ) : (
-          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {recentRoutes.map((route) => (
               <li key={route.id}>
                 <RouteCard
@@ -106,7 +106,7 @@ export default async function HomePage() {
         {popularRoutes.length === 0 ? (
           <p className="text-muted-foreground">Пока нет публичных маршрутов.</p>
         ) : (
-          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {popularRoutes.map((route) => (
               <li key={route.id}>
                 <RouteCard

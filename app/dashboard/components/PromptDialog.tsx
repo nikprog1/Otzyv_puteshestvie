@@ -2,8 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { createRoute, updateRoute } from "../actions";
 import type { Trip_Route } from "@prisma/client";
+import { cn } from "@/lib/utils";
 
 type PromptDialogProps = {
   open: boolean;
@@ -48,64 +59,54 @@ export function PromptDialog({
     }
   }, [state?.success, onClose]);
 
-  if (!open) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="dialog-title"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-6 shadow-lg"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 id="dialog-title" className="text-lg font-semibold text-slate-900">
-          {mode === "create" ? "Новый маршрут" : "Редактировать маршрут"}
-        </h2>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent showCloseButton={true} className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle id="dialog-title">
+            {mode === "create" ? "Новый маршрут" : "Редактировать маршрут"}
+          </DialogTitle>
+        </DialogHeader>
 
-        <form action={action} className="mt-4 flex flex-col gap-4">
+        <form action={action} className="flex flex-col gap-4">
           {mode === "edit" && initialRoute && (
             <input type="hidden" name="id" value={initialRoute.id} />
           )}
 
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium text-slate-700">
-              Заголовок
-            </label>
-            <input
+          <div className="grid gap-2">
+            <Label htmlFor="title">Заголовок</Label>
+            <Input
               id="title"
               name="title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+              placeholder="Название маршрута"
             />
           </div>
 
-          <div>
-            <label htmlFor="content" className="block text-sm font-medium text-slate-700">
-              Описание
-            </label>
+          <div className="grid gap-2">
+            <Label htmlFor="content">Описание</Label>
             <textarea
               id="content"
               name="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={4}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+              placeholder="Описание маршрута"
+              className={cn(
+                "flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none",
+                "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+                "placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              )}
             />
           </div>
 
-          <div>
-            <span className="block text-sm font-medium text-slate-700">
-              Видимость
-            </span>
-            <div className="mt-2 flex gap-4">
-              <label className="flex items-center gap-2">
+          <div className="space-y-2">
+            <Label>Видимость</Label>
+            <div className="flex gap-4">
+              <label className="flex cursor-pointer items-center gap-2">
                 <input
                   type="radio"
                   name="visibility"
@@ -116,7 +117,7 @@ export function PromptDialog({
                 />
                 Приватный
               </label>
-              <label className="flex items-center gap-2">
+              <label className="flex cursor-pointer items-center gap-2">
                 <input
                   type="radio"
                   name="visibility"
@@ -134,31 +135,23 @@ export function PromptDialog({
             <p className="text-sm text-red-600">{state.error}</p>
           )}
 
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
+          <DialogFooter showCloseButton={false}>
+            <Button type="button" variant="outline" onClick={onClose}>
               Отмена
-            </button>
+            </Button>
             <SubmitButton />
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="rounded-md bg-slate-800 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
-    >
+    <Button type="submit" disabled={pending}>
       {pending ? "Сохранение…" : "Сохранить"}
-    </button>
+    </Button>
   );
 }
