@@ -57,7 +57,7 @@ export async function createRoute(
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/public");
-  return {};
+  return { success: true };
 }
 
 export async function updateRoute(
