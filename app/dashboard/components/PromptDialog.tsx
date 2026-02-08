@@ -16,12 +16,14 @@ import { Button } from "@/components/ui/button";
 import { createRoute, updateRoute } from "../actions";
 import type { Trip_Route } from "@prisma/client";
 import { cn } from "@/lib/utils";
+// lj,fdktybt ajn (добавление фото)
+import { RouteImageUpload, type RouteImageItem } from "./RouteImageUpload";
 
 type PromptDialogProps = {
   open: boolean;
   onClose: () => void;
   mode: "create" | "edit";
-  initialRoute?: Trip_Route | null;
+  initialRoute?: (Trip_Route & { images?: RouteImageItem[] }) | null;
 };
 
 export function PromptDialog({
@@ -143,6 +145,14 @@ export function PromptDialog({
               </label>
             </div>
           </div>
+
+          {/* lj,fdktybt ajn — фото маршрута (заглушено в RouteImageUpload) */}
+          {mode === "edit" && initialRoute && (
+            <RouteImageUpload
+              routeId={initialRoute.id}
+              initialImages={initialRoute.images ?? []}
+            />
+          )}
 
           {state?.error && (
             <p className="text-sm text-red-600">{state.error}</p>

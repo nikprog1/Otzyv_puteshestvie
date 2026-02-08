@@ -41,6 +41,7 @@ export default async function DashboardPage({
       orderBy: { updatedAt: "desc" },
       skip,
       take: PAGE_SIZE,
+      include: { images: { orderBy: { order: "asc" } } },
     }),
     prisma.trip_Route.count({ where }),
   ]);

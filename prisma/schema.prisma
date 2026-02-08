@@ -81,9 +81,26 @@ model Trip_Route {
   collections CollectionRoute[]
   favorites   Favorite[]
   likes       Like[]
+  images      RouteImage[]
 
   @@index([ownerId, updatedAt])
   @@index([visibility, createdAt])
+}
+
+model RouteImage {
+  id        String     @id @default(uuid()) @db.Uuid
+  routeId   String     @db.Uuid
+  order     Int        @default(0)
+  original  String
+  url150    String?
+  url300    String?
+  url600    String?
+  url1080   String?
+  createdAt DateTime  @default(now())
+
+  route     Trip_Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@index([routeId])
 }
 
 model Favorite {

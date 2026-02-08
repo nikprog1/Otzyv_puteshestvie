@@ -20,6 +20,7 @@ export default async function RoutePage({
       owner: { select: { name: true, image: true } },
       tags: { include: { tag: { select: { name: true } } } },
       _count: { select: { likes: true } },
+      images: { orderBy: { order: "asc" } },
     },
   });
 
@@ -52,6 +53,25 @@ export default async function RoutePage({
       </div>
 
       <article className="space-y-6">
+        {/* lj,fdktybt ajn (добавление фото) — галерея фото маршрута */}
+        {route.images.length > 0 && (
+          <div className="space-y-2">
+            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {route.images.map((img) => {
+                const url = img.url600 ?? img.url1080 ?? img.url300 ?? img.original;
+                return (
+                  <li key={img.id} className="overflow-hidden rounded-lg border border-slate-200">
+                    <img
+                      src={url}
+                      alt=""
+                      className="aspect-[4/3] w-full object-cover"
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
         <header>
           <h1 className="text-3xl font-bold tracking-tight">{route.title}</h1>
           <p className="mt-2 text-muted-foreground">

@@ -27,6 +27,7 @@ export default async function FavoritesPage({
       orderBy: { updatedAt: "desc" },
       skip,
       take: PAGE_SIZE,
+      include: { images: { orderBy: { order: "asc" } } },
     }),
     prisma.trip_Route.count({
       where: {

@@ -26,6 +26,8 @@ export default async function CatalogPage({
         owner: { select: { name: true } },
         tags: { include: { tag: { select: { name: true } } } },
         _count: { select: { likes: true } },
+        // lj,fdktybt ajn — превью фото в карточке
+        images: { orderBy: { order: "asc" }, take: 1 },
       },
     }),
     prisma.trip_Route.count({ where: { visibility: "PUBLIC" } }),

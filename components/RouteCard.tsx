@@ -11,6 +11,7 @@ export type RouteCardRoute = {
   owner: { name: string | null };
   tags: { tag: { name: string } }[];
   _count: { likes: number };
+  images?: { url600: string | null; url300: string | null; url150: string | null; original: string }[];
 };
 
 type RouteCardProps = {
@@ -27,9 +28,26 @@ function formatDate(d: Date) {
   });
 }
 
+// lj,fdktybt ajn (добавление фото) — отображение превью в каталоге
+function cardImageUrl(route: RouteCardRoute): string | null {
+  const first = route.images?.[0];
+  if (!first) return null;
+  return first.url600 ?? first.url300 ?? first.url150 ?? first.original ?? null;
+}
+
 export function RouteCard({ route, likesCount, likedByMe }: RouteCardProps) {
+  const imageUrl = cardImageUrl(route);
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col overflow-hidden">
+      {imageUrl && (
+        <Link href={`/routes/${route.id}`} className="block aspect-[16/10] w-full overflow-hidden bg-slate-100">
+          <img
+            src={imageUrl}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+        </Link>
+      )}
       <CardHeader className="gap-1 pb-2">
         <h3 className="line-clamp-2 font-semibold leading-tight">
           {route.title}
