@@ -117,8 +117,9 @@ export function PromptDialog({
           <div className="space-y-2">
             <Label>Видимость</Label>
             <div className="flex gap-4">
-              <label className="flex cursor-pointer items-center gap-2">
+              <label htmlFor="visibility-private" className="flex cursor-pointer items-center gap-2">
                 <input
+                  id="visibility-private"
                   type="radio"
                   name="visibility"
                   value="PRIVATE"
@@ -128,8 +129,9 @@ export function PromptDialog({
                 />
                 Приватный
               </label>
-              <label className="flex cursor-pointer items-center gap-2">
+              <label htmlFor="visibility-public" className="flex cursor-pointer items-center gap-2">
                 <input
+                  id="visibility-public"
                   type="radio"
                   name="visibility"
                   value="PUBLIC"

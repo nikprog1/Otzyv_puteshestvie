@@ -43,6 +43,8 @@ export function SearchInput({ placeholder = "Поиск…" }: { placeholder?: s
 
   return (
     <input
+      id="dashboard-search"
+      name="q"
       type="search"
       value={value}
       onChange={(e) => setValue(e.target.value)}
