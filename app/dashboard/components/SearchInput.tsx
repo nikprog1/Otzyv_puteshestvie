@@ -18,7 +18,6 @@ export function SearchInput({ placeholder = "Поиск…" }: { placeholder?: s
   }, [q]);
 
   useEffect(() => {
-    // Не трогаем URL при первом монтировании — избегаем лишней навигации и вечной загрузки
     if (isFirstMount.current) {
       isFirstMount.current = false;
       return;
@@ -34,7 +33,12 @@ export function SearchInput({ placeholder = "Поиск…" }: { placeholder?: s
       }
       const newQuery = params.toString();
       const currentQuery = searchParams.toString();
-      if (newQuery !== currentQuery) {
+      const norm = (s: string) => {
+        const p = new URLSearchParams(s);
+        p.sort();
+        return p.toString();
+      };
+      if (norm(newQuery) !== norm(currentQuery)) {
         router.push(pathname + (newQuery ? `?${newQuery}` : ""), { scroll: false });
       }
     }, DEBOUNCE_MS);
