@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const DEBOUNCE_MS = 300;
@@ -11,12 +11,18 @@ export function SearchInput({ placeholder = "Поиск…" }: { placeholder?: s
   const searchParams = useSearchParams();
   const q = searchParams.get("q") ?? "";
   const [value, setValue] = useState(q);
+  const isFirstMount = useRef(true);
 
   useEffect(() => {
     setValue(q);
   }, [q]);
 
   useEffect(() => {
+    // Не трогаем URL при первом монтировании — избегаем лишней навигации и вечной загрузки
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
     const t = setTimeout(() => {
       const params = new URLSearchParams(searchParams.toString());
       if (value.trim()) {
@@ -28,7 +34,6 @@ export function SearchInput({ placeholder = "Поиск…" }: { placeholder?: s
       }
       const newQuery = params.toString();
       const currentQuery = searchParams.toString();
-      // Не вызываем router.push, если URL не изменился — иначе браузер показывает загрузку
       if (newQuery !== currentQuery) {
         router.push(pathname + (newQuery ? `?${newQuery}` : ""), { scroll: false });
       }

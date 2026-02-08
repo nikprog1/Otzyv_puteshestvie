@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -61,11 +62,21 @@ export function PromptDialog({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent showCloseButton={true} className="sm:max-w-lg">
+      <DialogContent
+        showCloseButton={true}
+        className="sm:max-w-lg"
+        aria-labelledby="dialog-title"
+        aria-describedby="dialog-description"
+      >
         <DialogHeader>
           <DialogTitle id="dialog-title">
             {mode === "create" ? "Новый маршрут" : "Редактировать маршрут"}
           </DialogTitle>
+          <DialogDescription id="dialog-description" className="sr-only">
+            {mode === "create"
+              ? "Создание нового маршрута путешествия"
+              : "Редактирование маршрута"}
+          </DialogDescription>
         </DialogHeader>
 
         <form action={action} className="flex flex-col gap-4">
