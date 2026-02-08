@@ -26,8 +26,12 @@ export function SearchInput({ placeholder = "Поиск…" }: { placeholder?: s
         params.delete("q");
         params.delete("page");
       }
-      const query = params.toString();
-      router.push(pathname + (query ? `?${query}` : ""), { scroll: false });
+      const newQuery = params.toString();
+      const currentQuery = searchParams.toString();
+      // Не вызываем router.push, если URL не изменился — иначе браузер показывает загрузку
+      if (newQuery !== currentQuery) {
+        router.push(pathname + (newQuery ? `?${newQuery}` : ""), { scroll: false });
+      }
     }, DEBOUNCE_MS);
     return () => clearTimeout(t);
   }, [value, pathname, router, searchParams]);
