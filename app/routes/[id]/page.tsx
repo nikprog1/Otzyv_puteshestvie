@@ -57,7 +57,7 @@ export default async function RoutePage({
         {(route.images?.length ?? 0) > 0 && (
           <div className="space-y-2">
             <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {route.images.map((img) => {
+              {(route.images ?? []).map((img) => {
                 const url = img.url600 ?? img.url1080 ?? img.url300 ?? img.original;
                 return (
                   <li key={img.id} className="overflow-hidden rounded-lg border border-slate-200">
