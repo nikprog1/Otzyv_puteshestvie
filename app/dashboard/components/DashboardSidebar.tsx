@@ -24,9 +24,9 @@ export function DashboardSidebar({ user }: { user: User }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-full flex-col bg-slate-100/80 bg-gradient-to-b from-slate-50 to-slate-100 border-r border-slate-200">
+    <div className="flex h-full flex-col border-r border-slate-200 bg-white">
       <div className="flex flex-col gap-4 p-4">
-        <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white/60 p-3 shadow-sm">
+        <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 shadow-sm">
           {user.image ? (
             <img
               src={user.image}
