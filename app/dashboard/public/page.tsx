@@ -40,7 +40,7 @@ export default async function PublicRoutesPage({
       take: PAGE_SIZE,
       include: {
         _count: { select: { likes: true } },
-        images: { orderBy: { order: "asc" } },
+        // images: { orderBy: { order: "asc" } }, // lj,fdktybt ajn — раскомментировать после миграции
       },
     }),
     prisma.trip_Route.count({ where: { visibility: "PUBLIC" } }),
